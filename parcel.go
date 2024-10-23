@@ -84,6 +84,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 
 		res = append(res, p)
 	}
+	//Проверка ошибки из rows
+	if err = parcelsClient.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка итерации строк в parcelsClient.Next: %w", err)
+	}
 	return res, nil
 }
 
