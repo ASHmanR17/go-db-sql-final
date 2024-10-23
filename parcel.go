@@ -13,6 +13,7 @@ func NewParcelStore(db *sql.DB) ParcelStore {
 	return ParcelStore{db: db}
 }
 
+// Add добавляем посылку в БД
 func (s ParcelStore) Add(p Parcel) (int, error) {
 	// реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
 	newParsel, err := s.db.Exec("INSERT INTO parcel (client, status, address, created_at) VALUES (:client, :status, :address, :created_at)",
@@ -32,6 +33,7 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 	return int(id), nil
 }
 
+// Get считываем данные посылки по номеру записи в БД
 func (s ParcelStore) Get(number int) (Parcel, error) {
 	// реализуйте чтение строки по заданному number
 	// здесь из таблицы должна вернуться только одна строка
@@ -53,10 +55,11 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	return p, nil
 }
 
+// GetByClient считываем все посылки по заданному client в БД
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	// реализуйте чтение строк из таблицы parcel по заданному client
 	// здесь из таблицы может вернуться несколько строк
-	parcelsClient, err := s.db.Query("SELECT number, client, status, address, created_at  WHERE client = :client",
+	parcelsClient, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = :client",
 		sql.Named("client", client))
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения посылок клиента: %w", err)
@@ -76,7 +79,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 			&p.CreatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("get parcels by client id error: %w", err)
+			return nil, fmt.Errorf("ошибка считывания посылок по id клиента: %w", err)
 		}
 
 		res = append(res, p)
@@ -84,6 +87,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	return res, nil
 }
 
+// SetStatus обновление статуса в таблице parcel по номеру записи в БД
 func (s ParcelStore) SetStatus(number int, status string) error {
 	// реализуйте обновление статуса в таблице parcel
 	_, err := s.db.Exec("UPDATE parcel SET status = :status WHERE number = :number",
@@ -91,11 +95,13 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 		sql.Named("status", status),
 	)
 	if err != nil {
-		return fmt.Errorf("ошиька обновления статуса посылки: %w", err)
+		return fmt.Errorf("ошибка обновления статуса посылки: %w", err)
 	}
 	return nil
 }
 
+// SetAddress обновление адреса в таблице parcel по номеру записи в БД
+// менять адрес можно только если значение статуса registered
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
@@ -110,6 +116,8 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	return nil
 }
 
+// Delete удаляем посылку из БД по номеру записи number
+// удалять строку можно только если значение статуса registered
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
